@@ -1,0 +1,65 @@
+class UnionFind:
+    def __init__(self, n: int):
+        self.par = {}
+        self.rank = {}
+
+        for i in range(n):
+            self.par[i] = i
+            self.rank[i] = 0
+
+    def find(self, x: int) -> int:
+        cur = self.par[x]
+        while cur != self.par[cur]:
+            self.par[cur] = self.par[self.par[cur]]
+            cur = self.par[cur]
+        return cur
+
+    def union(self, x: int, y: int) -> None:
+        root_x, root_y = self.find(x), self.find(y)
+        if root_x == root_y:
+            return
+
+        if self.rank[root_x] > self.rank[root_y]:
+            self.par[root_y] = root_x
+        elif self.rank[root_y] < self.rank[root_x]:
+            self.par[root_x] = root_y
+        else:
+            self.par[root_y] = root_x
+            self.rank[root_x] += 1
+
+class Solution:
+    def accountsMerge(self, accounts: List[List[str]]) -> List[List[str]]:
+        # 建立 union find，一個 account 當作一組就好
+        union_find = UnionFind(len(accounts))
+        email_to_account_idx = {}
+
+
+        for account_idx, account in enumerate(accounts):
+            for email in account[1:]:
+                # 有 email 在 list 中代表有重複，union 起來
+                if email in email_to_account_idx:
+                    another_account_idx = email_to_account_idx[email]
+                    union_find.union(account_idx, another_account_idx)
+                # 沒有就建立，代表走過了
+                else:
+                    email_to_account_idx[email] = account_idx
+
+        # 後面都是在 merge 和建立答案
+        result = defaultdict(set)
+        for account_idx, account in enumerate(accounts):
+            group_idx = union_find.find(account_idx)
+            for email in account[1:]:
+                result[group_idx].add(email)
+
+        answers = []
+        for idx, value in result.items():
+            l = sorted(list(value))
+            answer = [accounts[idx][0]] + l
+            answers.append(answer)
+
+        return answers
+
+
+
+    
+
